@@ -3,13 +3,19 @@ import * as Yup from 'yup';
 import Subscription from '../models/Subscription';
 
 class SubscriptionController {
+  async index(req, res) {
+    const subscriptions = await Subscription.findAll();
+
+    return res.json(subscriptions);
+  }
+
   async store(req, res) {
-    const schema = Yup.object().shape({
+    const schema = await Yup.object().shape({
       title: Yup.string().required(),
       duration: Yup.number()
         .positive()
         .required(),
-      montlhyPrice: Yup.number()
+      price: Yup.number()
         .positive()
         .required(),
     });
@@ -18,13 +24,13 @@ class SubscriptionController {
         .status(400)
         .json({ error: 'Faltam dados a serem preenchidos' });
     }
-    /* const subscriptionExists = await Subscription.findOne({
+    const subExists = await Subscription.findOne({
       where: { title: req.body.title },
     });
-    if (subscriptionExists) {
-      return res.status(400).json({ error: 'Plano já cadastrado' });
-    } */
 
+    if (subExists) {
+      return res.status(400).json({ error: 'Plano já cadastrado' });
+    }
     Subscription.create(req.body);
     return res.json(req.body);
   }

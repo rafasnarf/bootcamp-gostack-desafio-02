@@ -15,7 +15,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
-      montlhyPrice: {
+      price: {
         type: Sequelize.FLOAT,
         allowNull: false,
       },

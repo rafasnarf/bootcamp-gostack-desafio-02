@@ -6,7 +6,7 @@ class Subscription extends Model {
       {
         title: Sequelize.STRING,
         duration: Sequelize.INTEGER,
-        montlhyPrice: Sequelize.FLOAT,
+        price: Sequelize.FLOAT,
       },
       {
         sequelize,
@@ -14,4 +14,5 @@ class Subscription extends Model {
     );
   }
 }
+
 export default Subscription;

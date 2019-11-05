@@ -21,5 +21,6 @@ routes.get('/student', StudentController.index);
 routes.post('/student', StudentController.store);
 routes.put('/student', StudentController.update);
 routes.post('/subscription', SubscriptionController.store);
+routes.get('/subscription', SubscriptionController.index);
 
 export default routes;
