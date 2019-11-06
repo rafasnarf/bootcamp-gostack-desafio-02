@@ -34,6 +34,43 @@ class SubscriptionController {
     Subscription.create(req.body);
     return res.json(req.body);
   }
-}
 
+  async update(req, res) {
+    const checkPlanExists = await Subscription.findAll({
+      where: {
+        id: req.params.id,
+      },
+    });
+
+    if (!checkPlanExists) {
+      return res.status(400).json({ error: 'Plano inexistente' });
+    }
+    const schema = await Yup.object().shape({
+      title: Yup.string(),
+      duration: Yup.number().positive(),
+      price: Yup.number().positive(),
+    });
+    if (!(await schema.isValid(req.body))) {
+      return res
+        .status(400)
+        .json({ error: 'Faltam dados a serem preenchidos' });
+    }
+    Subscription.update(req.body, { where: { id: req.params.id } });
+    return res.json(req.body);
+  }
+
+  async delete(req, res) {
+    const checkPlanExists = await Subscription.findOne({
+      where: {
+        id: req.params.id,
+      },
+    });
+    if (!checkPlanExists) {
+      return res.status(400).json({ error: 'Este plano não existe' });
+    }
+
+    Subscription.destroy({ where: { id: req.params.id } });
+    return res.json({ message: 'Plano removido do sistema' });
+  }
+}
 export default new SubscriptionController();
