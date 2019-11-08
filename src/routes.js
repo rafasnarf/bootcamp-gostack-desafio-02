@@ -26,5 +26,6 @@ routes.post('/subscription', SubscriptionController.store);
 routes.put('/subscription/:id', SubscriptionController.update);
 routes.delete('/subscription/:id', SubscriptionController.delete);
 routes.post('/registration', RegistrationController.store);
+routes.get('/registration', RegistrationController.index);
 
 export default routes;

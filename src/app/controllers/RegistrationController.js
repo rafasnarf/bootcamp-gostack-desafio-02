@@ -1,5 +1,7 @@
+/* eslint-disable class-methods-use-this */
 import { addDays, startOfDay, parseISO } from 'date-fns';
 import Registrations from '../models/Registration';
+
 import Subscription from '../models/Subscription';
 import Student from '../models/Student';
 
@@ -60,5 +62,31 @@ class RegistrationController {
     });
     return res.json(registration);
   }
+
+  async index(req, res) {
+    const { page = 1 } = req.query;
+    const registrations = await Registrations.findAll({
+      order: ['id'],
+      attributes: ['id', 'start_date', 'end_date', 'totalprice'],
+      limit: 20,
+      offset: (page - 1) * 20,
+      include: [
+        {
+          model: Student,
+          as: 'student',
+          attributes: ['id', 'name', 'email'],
+        },
+        {
+          model: Subscription,
+          as: 'subscription',
+          attributes: ['id', 'title', 'duration', 'price'],
+        },
+      ],
+    });
+
+    return res.json(registrations);
+  }
+
+  async update(req, res) {}
 }
 export default new RegistrationController();
