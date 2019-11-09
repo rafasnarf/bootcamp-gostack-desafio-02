@@ -1,4 +1,5 @@
 /* eslint-disable class-methods-use-this */
+import * as Yup from 'yup';
 import { addDays, startOfDay, parseISO } from 'date-fns';
 import Registrations from '../models/Registration';
 
@@ -87,6 +88,42 @@ class RegistrationController {
     return res.json(registrations);
   }
 
-  async update(req, res) {}
+  async update(req, res) {
+    const schema = Yup.object().shape({
+      start_date: Yup.date(),
+      totalprice: Yup.date(),
+      end_date: Yup.date(),
+    });
+    if (!(await schema.isValid(req.body))) {
+      return res
+        .status(400)
+        .json({ error: 'Faltam dados a serem preenchidos' });
+    }
+    const { id } = req.body;
+
+    const regExists = Registrations.findOne({ where: { id } });
+
+    if (!regExists) {
+      return res.status(401).json({ error: 'Matrícula não cadastrado' });
+    }
+
+    const { id, student_id, subscription_id, start_date, totalprice_ end_date } = await Registrations.update(req.body);
+
+    return res.json({ id, student_id, subscription_id, start_date, totalprice_ end_date })
+
+  }
+
+  async delete(req, res) {
+    const checkReg = Registrations.findOne({
+      where: {
+        req.params.id
+      }
+    });
+    if (!checkReg) {
+      return res.status(400).json({ error: 'Este matricula não existe' });
+    }
+    Registrations.destroy({ where: { id: req.params.id } });
+    return res.json({ message: 'Plano removido do sistema' });
+  }
 }
 export default new RegistrationController();
