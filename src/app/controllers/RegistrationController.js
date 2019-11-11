@@ -7,8 +7,18 @@ import Subscription from '../models/Subscription';
 import Student from '../models/Student';
 
 class RegistrationController {
-  // eslint-disable-next-line class-methods-use-this
   async store(req, res) {
+    const schema = Yup.object().shape({
+      start_date: Yup.date().required(),
+      subscription_id: Yup.number().required(),
+      student_id: Yup.number().required(),
+    });
+    if (!(await schema.isValid(req.body))) {
+      return res
+        .status(400)
+        .json({ error: 'Faltam dados a serem preenchidos' });
+    }
+
     const { subscription_id, student_id, start_date } = req.body;
     const subExists = await Subscription.findOne({
       where: { id: subscription_id },
@@ -23,7 +33,7 @@ class RegistrationController {
           {
             model: Student,
             as: 'student_id',
-            attributes: ['name', 'email'],
+            attributes: ['name', 'email', 'hasplan'],
           },
         ],
       }
@@ -31,8 +41,8 @@ class RegistrationController {
     if (!studentExists) {
       return res.status(400).json({ error: 'Aluno não cadastrado' });
     }
-    const regExists = await Registrations.findOne({
-      where: { student_id, subscription_id },
+    const regExists = await Student.findOne({
+      where: { id: student_id, hasplan: true },
     });
     if (regExists) {
       return res
@@ -54,6 +64,7 @@ class RegistrationController {
     const parsedDate = parseISO(start_date);
     const endDate = addDays(startOfDay(parsedDate), 30);
     const totalprice = parseFloat(subscriptions.price * subscriptions.duration);
+    await Student.update({ hasplan: true }, { where: { id: student_id } });
     const registration = await Registrations.create({
       start_date: parsedDate,
       end_date: endDate,
@@ -61,6 +72,7 @@ class RegistrationController {
       student_id,
       subscription_id,
     });
+
     return res.json(registration);
   }
 
@@ -90,39 +102,69 @@ class RegistrationController {
 
   async update(req, res) {
     const schema = Yup.object().shape({
-      start_date: Yup.date(),
-      totalprice: Yup.date(),
-      end_date: Yup.date(),
+      start_date: Yup.date().required(),
+      subscription_id: Yup.number().required(),
+      student_id: Yup.number().required(),
     });
     if (!(await schema.isValid(req.body))) {
       return res
         .status(400)
         .json({ error: 'Faltam dados a serem preenchidos' });
     }
-    const { id } = req.body;
-
-    const regExists = Registrations.findOne({ where: { id } });
-
-    if (!regExists) {
-      return res.status(401).json({ error: 'Matrícula não cadastrado' });
+    const { student_id, subscription_id, start_date } = req.body;
+    const studentExists = await Student.findOne({
+      where: { id: student_id },
+    });
+    if (!studentExists) {
+      return res.status(400).json({ error: 'Aluno não existe' });
     }
-
-    const { id, student_id, subscription_id, start_date, totalprice_ end_date } = await Registrations.update(req.body);
-
-    return res.json({ id, student_id, subscription_id, start_date, totalprice_ end_date })
-
+    const subExists = await Subscription.findOne({
+      where: { id: subscription_id },
+    });
+    if (!subExists) {
+      return res.status(400).json({ error: 'Plano escolhido inexistente' });
+    }
+    const subscriptions = await Subscription.findOne(
+      { where: { id: subscription_id } },
+      {
+        include: [
+          {
+            model: Subscription,
+            as: 'subscription_id',
+            attributes: ['id', 'title', 'duration', 'price'],
+          },
+        ],
+      }
+    );
+    const parsedDate = parseISO(start_date);
+    const endDate = addDays(startOfDay(parsedDate), 30);
+    const totalprice = parseFloat(subscriptions.price * subscriptions.duration);
+    const updating = await Registrations.update(
+      {
+        start_date: parsedDate,
+        end_date: endDate,
+        totalprice,
+        student_id,
+        subscription_id,
+      },
+      { where: { id: req.params.id } }
+    );
+    return res.json(updating);
   }
 
   async delete(req, res) {
-    const checkReg = Registrations.findOne({
-      where: {
-        req.params.id
-      }
+    const checkRegExists = await Registrations.findOne({
+      where: { id: req.params.id },
     });
-    if (!checkReg) {
-      return res.status(400).json({ error: 'Este matricula não existe' });
+    if (!checkRegExists) {
+      return res.status(400).json({ error: 'Esta matrícula não existe' });
     }
-    Registrations.destroy({ where: { id: req.params.id } });
+    await Student.update(
+      { hasplan: false },
+      { where: { id: req.body.student_id } }
+    );
+    await Registrations.destroy({ where: { id: req.params.id } });
+
     return res.json({ message: 'Plano removido do sistema' });
   }
 }

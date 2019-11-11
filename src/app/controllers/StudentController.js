@@ -40,7 +40,11 @@ class StudentController {
     if (studentExists) {
       return res.status(400).json({ error: 'Aluno já cadastrado' });
     }
-    Student.create(req.body);
+    await Student.create(req.body);
+    await Student.update(
+      { hasplan: false },
+      { where: { email: req.body.email } }
+    );
     return res.json(req.body);
   }
 
