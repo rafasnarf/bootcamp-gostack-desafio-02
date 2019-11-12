@@ -9,6 +9,7 @@ class Student extends Model {
         age: Sequelize.INTEGER,
         weight: Sequelize.FLOAT,
         height: Sequelize.FLOAT,
+        hasplan: Sequelize.BOOLEAN,
       },
       {
         sequelize,

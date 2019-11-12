@@ -7,11 +7,14 @@ import SessionController from './app/controllers/SessionController';
 import StudentController from './app/controllers/StudentController';
 import SubscriptionController from './app/controllers/SubscriptionController';
 import RegistrationController from './app/controllers/RegistrationController';
+import CheckinController from './app/controllers/CheckinController';
 
 // Import of middlewares
 import authMiddleware from './app/middlewares/auth';
 
 const routes = new Router();
+
+routes.post('/students/:id/checkins', CheckinController.store);
 
 routes.post('/user', UserController.store);
 routes.post('/sessions', SessionController.store);
