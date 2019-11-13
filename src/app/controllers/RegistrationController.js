@@ -1,7 +1,10 @@
 /* eslint-disable class-methods-use-this */
 import * as Yup from 'yup';
-import { addDays, startOfDay, parseISO } from 'date-fns';
+import { addDays, startOfDay, parseISO, format } from 'date-fns';
+import pt from 'date-fns/locale/pt';
 import Registrations from '../models/Registration';
+import RegistrationMail from '../jobs/registrationMail';
+import Queue from '../../lib/Queue';
 
 import Subscription from '../models/Subscription';
 import Student from '../models/Student';
@@ -65,6 +68,7 @@ class RegistrationController {
     const endDate = addDays(startOfDay(parsedDate), 30);
     const totalprice = parseFloat(subscriptions.price * subscriptions.duration);
     await Student.update({ hasplan: true }, { where: { id: student_id } });
+
     const registration = await Registrations.create({
       start_date: parsedDate,
       end_date: endDate,
@@ -72,7 +76,13 @@ class RegistrationController {
       student_id,
       subscription_id,
     });
-
+    await Queue.add(RegistrationMail.key, {
+      studentExists,
+      subscriptions,
+      parsedDate,
+      endDate,
+      totalprice,
+    });
     return res.json(registration);
   }
 

@@ -15,6 +15,7 @@ import authMiddleware from './app/middlewares/auth';
 const routes = new Router();
 
 routes.post('/students/:id/checkins', CheckinController.store);
+routes.get('/students/:id/checkins', CheckinController.index);
 
 routes.post('/user', UserController.store);
 routes.post('/sessions', SessionController.store);
