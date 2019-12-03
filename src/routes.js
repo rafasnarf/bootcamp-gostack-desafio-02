@@ -8,6 +8,9 @@ import StudentController from './app/controllers/StudentController';
 import SubscriptionController from './app/controllers/SubscriptionController';
 import RegistrationController from './app/controllers/RegistrationController';
 import CheckinController from './app/controllers/CheckinController';
+import HelpOrderController from './app/controllers/HelpOrderController';
+import AnswerController from './app/controllers/AnswerController';
+import StudentAnswerControler from './app/controllers/StudentAnswerController';
 
 // Import of middlewares
 import authMiddleware from './app/middlewares/auth';
@@ -16,6 +19,7 @@ const routes = new Router();
 
 routes.post('/students/:id/checkins', CheckinController.store);
 routes.get('/students/:id/checkins', CheckinController.index);
+routes.post('/students/:id/help-orders', HelpOrderController.store);
 
 routes.post('/user', UserController.store);
 routes.post('/sessions', SessionController.store);
@@ -33,5 +37,8 @@ routes.post('/registration', RegistrationController.store);
 routes.get('/registration', RegistrationController.index);
 routes.put('/registration/:id', RegistrationController.update);
 routes.delete('/registration/:id', RegistrationController.delete);
+routes.get('/help-orders', AnswerController.index);
+routes.get('/students/:id/help-orders', StudentAnswerControler.index);
+routes.post('/help-orders/:id/answer', AnswerController.store);
 
 export default routes;
