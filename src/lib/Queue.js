@@ -1,9 +1,10 @@
 /* eslint-disable class-methods-use-this */
 import Bee from 'bee-queue';
 import RegistrationMail from '../app/jobs/registrationMail';
+import AnswerMail from '../app/jobs/answerMail';
 import redisConfig from '../config/redis';
 
-const jobs = [RegistrationMail];
+const jobs = [RegistrationMail, AnswerMail];
 
 class Queue {
   constructor() {

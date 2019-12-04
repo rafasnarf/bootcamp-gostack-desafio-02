@@ -2,8 +2,10 @@
 import * as Yup from 'yup';
 import { parseISO } from 'date-fns';
 
+import { parse } from 'uri-js';
 import HelpOrders from '../models/HelpOrders';
 import Student from '../models/Student';
+import AnswerMail from '../jobs/answerMail';
 import Queue from '../../lib/Queue';
 
 class AnswerController {
@@ -26,17 +28,41 @@ class AnswerController {
   }
 
   async store(req, res) {
-    const answerExists = await HelpOrders.findOne({
-      where: { id: req.params.id },
-    });
+    const answerExists = await HelpOrders.findOne(
+      { where: { id: req.params.id } },
+      {
+        include: [
+          {
+            model: HelpOrders,
+            attributes: ['id', 'question', 'student_id', 'answer', 'answer_at'],
+          },
+        ],
+      }
+    );
     if (!answerExists) {
       return res
         .status(400)
         .json({ error: 'Solicitação de auxílio não encontrada' });
     }
+    const studentExists = await Student.findOne(
+      {
+        where: { id: answerExists.student_id },
+      },
+      {
+        include: [
+          {
+            model: Student,
+            as: 'student_id',
+            attributes: ['name', 'email'],
+          },
+        ],
+      }
+    );
+    if (!studentExists) {
+      return res.status(400).json({ error: 'Aluno não cadastrado' });
+    }
     const schema = Yup.object().shape({
       answer: Yup.string().required(),
-      answer_at: Yup.date().required(),
     });
     if (!(await schema.isValid(req.body))) {
       return res
@@ -44,11 +70,20 @@ class AnswerController {
         .json({ error: 'Faltam dados a serem preenchidos' });
     }
 
-    const { answer, answer_at } = req.body;
+    const { answer } = req.body;
+    const answerDate = new Date();
+    const parsedDate = parseISO(answerDate);
     const validAnswer = await HelpOrders.update(
-      { answer, answer_at },
+      { answer, answer_at: answerDate },
       { where: { id: req.params.id } }
     );
+
+    await Queue.add(AnswerMail.key, {
+      answerExists,
+      studentExists,
+      answerDate,
+      answer,
+    });
     return res.json(validAnswer);
   }
 }
